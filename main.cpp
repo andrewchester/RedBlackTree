@@ -9,7 +9,8 @@ int main(){
 	t.insert(20);
 	t.insert(7);
 	t.insert(3);
-	t.print(true);
+	t.insert(1);
+	t.print(t.root, 0);
 
 	return 0;
 }
