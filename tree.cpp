@@ -7,14 +7,17 @@ Tree::Tree(){
 	blackheight = 0;
 	height = 0;
 }
-
+void Tree::countchildren(Node* root, int* count){
+	(*count)++;
+	if(root->left != 0) countchildren(root->left, count);
+	if(root->right != 0) countchildren(root->right, count);
+}
 void Tree::print(Node* root, int current_depth){
 	if(root->right != 0)
 		print(root->right, current_depth + 1);
 	for(int i = 0; i < current_depth; i++)
-		std::cout << "   ";
-	//Change output
-	std::cout << root->data << std::endl;
+		std::cout << "     ";
+	std::cout << root->data * root->red << std::endl;
 	if(root->left != 0)
 		print(root->left, current_depth + 1);
 }
@@ -22,7 +25,7 @@ void Tree::print(Node* root, int current_depth){
 void Tree::colorchange(Node* leaf){
 	Node* grandfather;
 	Node* uncle;
-	if (leaf->parent->parent != 0)
+	if (leaf->parent != 0 && leaf->parent->parent != 0)
 		grandfather = leaf->parent->parent;
 	else
 		return;
@@ -31,8 +34,12 @@ void Tree::colorchange(Node* leaf){
 	else
 		uncle = grandfather->left;
 	leaf->parent->red *= -1;
-	if(uncle != 0)
+	int* count = new int;
+	*count = 0;
+	countchildren(uncle, count);
+	if(uncle != 0 && *count > 2)
 		uncle->red *= -1;
+	delete count;
 	colorchange(leaf->parent);
 }
 
@@ -42,7 +49,7 @@ void Tree::insert(int data){
 		height++;
 		root = new Node();
 		root->data = data;
-		root->red = -1;
+		root->red = 1;
 		return;
 	}
 
@@ -55,12 +62,13 @@ void Tree::insert(int data){
 			else{
 				Node* newnode = new Node();
 				newnode->data = data;
-				newnode->red = 1;
+				newnode->red = -1;
 				newnode->parent = current;
 				current->right = newnode;
 				size++;
-
-				colorchange(newnode);
+				
+				if(newnode->parent->red == -1)
+					colorchange(newnode);
 				root->red = 1;
 				break;
 			}
@@ -70,12 +78,13 @@ void Tree::insert(int data){
 			else{
 				Node* newnode = new Node();
 				newnode->data = data;
-				newnode->red = 1;
+				newnode->red = -1;
 				newnode->parent = current;
 				current->left = newnode;
 				size++;
-
-				colorchange(newnode);
+				
+				if(newnode->parent->red == -1)
+					colorchange(newnode);
 				root->red = 1;
 				break;
 			}
