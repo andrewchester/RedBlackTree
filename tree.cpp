@@ -1,4 +1,5 @@
 #include <iostream>
+#include <windows.h>
 #include "tree.h"
 
 Tree::Tree(){
@@ -7,40 +8,49 @@ Tree::Tree(){
 	blackheight = 0;
 	height = 0;
 }
-void Tree::countchildren(Node* root, int* count){
-	(*count)++;
-	if(root->left != 0) countchildren(root->left, count);
-	if(root->right != 0) countchildren(root->right, count);
-}
 void Tree::print(Node* root, int current_depth){
+	HANDLE hConsole = GetStdHandle(STD_OUTPUT_HANDLE);
 	if(root->right != 0)
 		print(root->right, current_depth + 1);
 	for(int i = 0; i < current_depth; i++)
 		std::cout << "     ";
-	std::cout << root->data * root->red << std::endl;
+	if (root->red == -1){
+		SetConsoleTextAttribute(hConsole, 12);
+		std::cout << root->data << std::endl;
+		SetConsoleTextAttribute(hConsole, 15);
+	}else{
+		std::cout << root->data << std::endl;
+	}
 	if(root->left != 0)
 		print(root->left, current_depth + 1);
 }
 
 void Tree::colorchange(Node* leaf){
-	Node* grandfather;
-	Node* uncle;
-	if (leaf->parent != 0 && leaf->parent->parent != 0)
-		grandfather = leaf->parent->parent;
-	else
-		return;
-	if (grandfather->left == leaf->parent)
-		uncle = grandfather->right;
-	else
-		uncle = grandfather->left;
-	leaf->parent->red *= -1;
-	int* count = new int;
-	*count = 0;
-	countchildren(uncle, count);
-	if(uncle != 0 && *count > 2)
-		uncle->red *= -1;
-	delete count;
-	colorchange(leaf->parent);
+	Node* parent = leaf->parent;
+	Node* uncle = 0;
+	
+	if(parent != 0 && parent->parent != 0){
+		if (parent->parent->left == parent){
+			uncle = parent->parent->right;
+		}else{
+			uncle = parent->parent->left;
+		}
+	}
+	if (parent != 0){
+		if (leaf->red == parent->red){
+			if(parent != 0)
+				parent->red *= -1;
+			if (uncle != 0){
+				if(uncle->left != 0 && uncle->red == uncle->left->red)
+					uncle->red *= -1;	
+				if(uncle->right != 0 && uncle->red == uncle->right->red)
+					uncle->red *= -1;
+				if(uncle->left == 0 && uncle->right == 0)
+					uncle->red *= -1;
+			}
+			colorchange(parent);
+		}
+	}
 }
 
 void Tree::insert(int data){
@@ -49,6 +59,7 @@ void Tree::insert(int data){
 		height++;
 		root = new Node();
 		root->data = data;
+		root->parent = 0;
 		root->red = 1;
 		return;
 	}
@@ -70,6 +81,9 @@ void Tree::insert(int data){
 				if(newnode->parent->red == -1)
 					colorchange(newnode);
 				root->red = 1;
+
+				
+
 				break;
 			}
 		if (data < current->data)

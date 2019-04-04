@@ -12,7 +12,6 @@ class Tree {
 		Node* search(int);
 		void balance(Node* root);
 		void colorchange(Node*);
-		void countchildren(Node*, int*);
 	public:
 		Tree();
 		Node* root;
