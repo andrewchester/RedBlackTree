@@ -32,7 +32,7 @@ int main(){
 	Tree t = Tree();
 	char* input = new char[10];
 	while(true){
-		std::cout << "Enter command(input, exit, print): ";
+		std::cout << "Enter command(input, search, print, exit): ";
 		std::cin.get(input, 10);
 		std::cin.clear();
 		std::cin.ignore(100, '\n');
@@ -68,6 +68,8 @@ int main(){
 				}
 				delete[] number;
 			}
+		}else if(strcmp(input, "search") == 0){
+			
 		}else if(strcmp(input, "exit") == 0){
 			break; //Leave when they type exit
 		}else if(strcmp(input, "print") == 0){
