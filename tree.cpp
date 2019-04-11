@@ -40,69 +40,111 @@ void Tree::balance(Node* leaf){
 	if(parent->parent != 0) grandparent = parent->parent;
 
 	if(parent != 0 && (parent->red != 1 || leaf != root)){
-		if(uncle != 0 && uncle->red == -1){
+		if(uncle != 0 && uncle->red == -1 && parent->red == -1){
 			parent->red = 1;
 			if(uncle != 0)
 				uncle->red = 1;
-			if(grandparent != 0){
+			if(grandparent != 0)
 				grandparent->red = -1;
-				if (grandparent != root)
-					balance(grandparent);
-			}
 		}
-		if(uncle == 0 || uncle->red == 1){
+		if(parent->red == -1 && (uncle == 0 || uncle->red == 1)){
 			if(grandparent != 0 && grandparent->left == parent && parent->left == leaf){ //Left left case
 				parent->parent = grandparent->parent;
+				if(grandparent->parent != 0)
+					grandparent->parent->left = parent;
 				if (parent->parent == 0)
 					root = parent;
+				grandparent->left = parent->right;
+				parent->right->parent = grandparent;
 				parent->right = grandparent;
+				parent->red = 1;
 				grandparent->parent = parent;
-				grandparent->left = 0;
 				grandparent->red = -1;
+
+				//Reset values since the grandparent got sifted down
+				parent = leaf->parent;
+				uncle = getuncle(leaf);
+				if(parent->parent != 0) grandparent = parent->parent;
+
 			}else if(grandparent != 0 && grandparent->left == parent && parent->right == leaf){ //Left right case
 				grandparent->left = leaf;
-				leaf->left = parent;
-				leaf->right = 0;
 				leaf->parent = grandparent;
-				parent->left = 0;
-				parent->right = 0;
+				parent->right = leaf->left;
+				leaf->left = parent;
 				parent->parent = leaf;
+
+				//Reset values since the parent got sifted down
+				leaf = parent;
+				parent = leaf->parent;
+				uncle = getuncle(leaf);
+				if(parent->parent != 0) grandparent = parent->parent;
 
 				//Repeat left left case
 				parent->parent = grandparent->parent;
+				if(grandparent->parent != 0)
+					grandparent->parent->left = parent;
 				if (parent->parent == 0)
 					root = parent;
+				grandparent->left = parent->right;
+				parent->right->parent = grandparent;
 				parent->right = grandparent;
+				parent->red = 1;
 				grandparent->parent = parent;
-				grandparent->left = 0;
 				grandparent->red = -1;
+
+				//Reset values since the grandparent got sifted down
+				parent = leaf->parent;
+				uncle = getuncle(leaf);
+				if(parent->parent != 0) grandparent = parent->parent;
 			}else if(grandparent != 0 && grandparent->right == parent && parent->right == leaf){ //Right right case
 				parent->parent = grandparent->parent;
+				if(grandparent->parent != 0)
+					grandparent->parent->right = parent;
 				if (parent->parent == 0)
 					root = parent;
+				grandparent->right = parent->left;
+				parent->left->parent = grandparent;
 				parent->left = grandparent;
 				grandparent->parent = parent;
-				grandparent->right = 0;
 				grandparent->red = -1;
+
+				//Reset values since the grandparent got sifted down
+				parent = leaf->parent;
+				uncle = getuncle(leaf);
+				if(parent->parent != 0) grandparent = parent->parent;
 			}else if(grandparent != 0 && grandparent->right == parent && parent->left == leaf){ //Right left case
 				grandparent->right = leaf;
-				leaf->right = parent;
-				leaf->left = 0;
 				leaf->parent = grandparent;
-				parent->left = 0;
-				parent->right = 0;
+				parent->left = leaf->right;
+				leaf->right = parent;
 				parent->parent = leaf;
 
-				//Mirror right right case
+				//Reset values since the parent got sifted down
+				leaf = parent;
+				parent = leaf->parent;
+				uncle = getuncle(leaf);
+				if(parent->parent != 0) grandparent = parent->parent;
+
+				//Repeat right right case
 				parent->parent = grandparent->parent;
+				if(grandparent->parent != 0)
+					grandparent->parent->right = parent;
 				if (parent->parent == 0)
 					root = parent;
+				grandparent->right = parent->left;
+				parent->left->parent = grandparent;
 				parent->left = grandparent;
 				grandparent->parent = parent;
-				grandparent->right = 0;
 				grandparent->red = -1;
+
+				//Reset values since the grandparent got sifted down
+				parent = leaf->parent;
+				uncle = getuncle(leaf);
+				if(parent->parent != 0) grandparent = parent->parent;
 			}
 		}
+		if (grandparent != 0 && grandparent != root)
+			balance(grandparent);
 	}
 }
 
@@ -118,39 +160,28 @@ void Tree::insert(int data){
 	}
 
 	Node* current = root;
-	int depth = 1;
 	while(true){
 		if (data >= current->data)
 			if (current->right != 0)
 				current = current->right;
-			else{
-				Node* newnode = new Node();
-				newnode->data = data;
-				newnode->red = -1;
-				newnode->parent = current;
-				current->right = newnode;
-				size++;
-				
-				balance(newnode);
-				root->red = 1;
-
+			else
 				break;
-			}
 		if (data < current->data)
 			if (current->left != 0)
 				current = current->left;
-			else{
-				Node* newnode = new Node();
-				newnode->data = data;
-				newnode->red = -1;
-				newnode->parent = current;
-				current->left = newnode;
-				size++;
-				
-				balance(newnode);
-				root->red = 1;
+			else
 				break;
-			}
 	}
-
+	Node* newnode = new Node();
+	newnode->data = data;
+	newnode->red = -1;
+	newnode->parent = current;
+	if(data < current->data)
+		current->left = newnode;
+	if(data >= current->data)
+		current->right = newnode;
+	size++;
+	
+	balance(newnode);
+	root->red = 1;
 }
