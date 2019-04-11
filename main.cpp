@@ -4,22 +4,29 @@
 #include <string.h>
 #include "tree.h"
 
+//Reads in a file containing numbers seperated by commas and adds them to the tree
+//Format:
+// 1,2,3,4,5,6
+// OR
+// 1,2,3,4,5,6,
 void from_file(Tree* t, const char* path){
 	std::ifstream file(path);
 	char c;
-	char token[100];
-	for(int i = 0; i < sizeof(token); i++) token[i] = 0;
+	char token[100]; //Holds the characters
+	for(int i = 0; i < sizeof(token); i++) token[i] = 0; //Fill with 0s
 	int position = 0;
-	while(file.get(c)){
-		if(c == ' '){
-			t->insert(atoi(token));
+	while(file.get(c)){ //Loops over characters
+		if(c == ','){ //When it hits a comma
+			t->insert(atoi(token)); //Adds the number
 			position = 0;
-			for(int i = 0; i < sizeof(token); i++) token[i] = 0;
+			for(int i = 0; i < sizeof(token); i++) token[i] = 0; //Clears the string
 		}else {
-			token[position] = c;
+			token[position] = c; //Adds the character to the string
 			position++;
 		}
 	}
+	if(strlen(token) > 0) //Adds a number at the end if the file wasn't closed with a comma
+		t->insert(atoi(token));
 }
 int main(){
 	Tree t = Tree();
@@ -36,7 +43,7 @@ int main(){
 			std::cin.clear();
 			std::cin.ignore(100, '\n');
 
-			if(strcmp(input, "file") == 0){
+			if(strcmp(input, "file") == 0){ //If the numbers are coming from a file
 				char* filepath = new char[200];
 				std::cout << "Enter path: ";
 				std::cin.get(filepath, 200);
@@ -45,31 +52,30 @@ int main(){
 
 				from_file(&t, filepath);
 				delete[] filepath;
-			}else if(strcmp(input, "manual") == 0){
+				t.print(t.root, 0); //Print after it adds the numbers
+			}else if(strcmp(input, "manual") == 0){ //If they're being manually entered
 				char* number = new char[10];
-				while(true){
+				while(true){ //Keep reading in numbers from the user as long as they're entering them
 					std::cout << "Enter number(type exit to leave): ";
 					std::cin >> number;
 					std::cin.clear();
 					std::cin.ignore(100, '\n');
 
 					if(strcmp(number, "exit") == 0)
-						break;
+						break; //Leave when they type exit
 					t.insert(atoi(number));
-					t.print(t.root, 0);
+					t.print(t.root, 0); //Print after it adds them
 				}
 				delete[] number;
 			}
 		}else if(strcmp(input, "exit") == 0){
-			break;
+			break; //Leave when they type exit
 		}else if(strcmp(input, "print") == 0){
-			t.print(t.root, 0);
+			t.print(t.root, 0); //Print the tree from the root
 		}else{
 			std::cout << "Not sure what that command is..." << std::endl;
 		}
 	}
 	delete[] input;
-	return 0;
-
 	return 0;
 }
