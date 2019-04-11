@@ -64,7 +64,8 @@ void Tree::balance(Node* leaf){
 				if (parent->parent == 0) //If at this point the parent of the parent is 0, which was the grandparent's old parent, then the parent must be the root node
 					root = parent;
 				grandparent->left = parent->right; //Shift over the parents right subtree over the the grandparent's left subtree
-				parent->right->parent = grandparent; //Set the parent of the parent's right subtree to the grandparent
+				if(parent->right != 0)
+					parent->right->parent = grandparent; //Set the parent of the parent's right subtree to the grandparent
 				parent->right = grandparent; //Set the right subtree of the parent to the grandparent, now the parent should be fully elevated to the grandparent's old position(almost)
 				parent->red = 1; //Make the parent black
 				grandparent->parent = parent; //Set the parent of the grandparent to the parent
@@ -97,7 +98,8 @@ void Tree::balance(Node* leaf){
 				if (parent->parent == 0)
 					root = parent;
 				grandparent->left = parent->right;
-				parent->right->parent = grandparent;
+				if(parent->right != 0)
+					parent->right->parent = grandparent;
 				parent->right = grandparent;
 				parent->red = 1;
 				grandparent->parent = parent;
@@ -114,10 +116,12 @@ void Tree::balance(Node* leaf){
 				if (parent->parent == 0) //If the great grandparent doesn't exist, then parent is the new root node
 					root = parent;
 				grandparent->right = parent->left; //Set the grandparent's right subtree to the parent's left subtree
-				parent->left->parent = grandparent; //Set the parent's left subtree's parent to the grandparent
+				if(parent->left != 0)
+					parent->left->parent = grandparent; //Set the parent's left subtree's parent to the grandparent
 				parent->left = grandparent; //Set the parent's left subtree to the grandparent
 				grandparent->parent = parent; //Set the grandparent's parent to parent
 				grandparent->red = -1; //Make the grandparent red
+				parent->red = 1; //Make the parent black
 
 				//Reset values since the grandparent got sifted down
 				parent = leaf->parent;
@@ -145,10 +149,12 @@ void Tree::balance(Node* leaf){
 				if (parent->parent == 0)
 					root = parent;
 				grandparent->right = parent->left;
-				parent->left->parent = grandparent;
+				if(parent->left != 0)
+					parent->left->parent = grandparent;
 				parent->left = grandparent;
 				grandparent->parent = parent;
 				grandparent->red = -1;
+				parent->red = 1;
 
 				//Reset values since the grandparent got sifted down
 				parent = leaf->parent;
