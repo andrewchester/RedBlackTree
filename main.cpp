@@ -69,7 +69,18 @@ int main(){
 				delete[] number;
 			}
 		}else if(strcmp(input, "search") == 0){
-			
+			char* number = new char[10];
+			std::cout << "Enter number: ";
+			std:: cin >> number;
+			std::cin.clear();
+			std::cin.ignore(100, '\n');
+
+			if(t.search(atoi(number)) == 0)
+				std::cout << number << " doesn't exist in the tree" << std::endl;
+			else{
+				t.print(t.root, 0, atoi(number));
+			}
+			delete[] number;
 		}else if(strcmp(input, "exit") == 0){
 			break; //Leave when they type exit
 		}else if(strcmp(input, "print") == 0){

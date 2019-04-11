@@ -23,6 +23,24 @@ Tree::Node* Tree::getuncle(Node* node){
 	return 0;
 }
 
+Tree::Node* Tree::search(int data){
+	Node* current = root;
+	while(true){
+		if(current->data == data)
+			return current;
+		if(data > current->data)
+			if(current->right != 0)
+				current = current->right;
+			else
+				break;
+		else if(data < current->data)
+			if(current->left != 0)
+				current = current->left;
+			else
+				break;
+	}
+	return 0;
+}
 //This function prints a subtree starting from a node, if you start from the root, it prints the whole tree
 void Tree::print(Node* root, int current_depth){
 	if(root->right != 0) //If we can go right, go right. The function goes all the way to the right of the tree first, printing it out with the right at the top, and left at the bottom
@@ -37,7 +55,25 @@ void Tree::print(Node* root, int current_depth){
 	if(root->left != 0) //Go left
 		print(root->left, current_depth + 1);
 }
-
+void Tree::print(Node* root, int current_depth, int search){
+	if(root->right != 0) //If we can go right, go right. The function goes all the way to the right of the tree first, printing it out with the right at the top, and left at the bottom
+		print(root->right, current_depth + 1, search);
+	for(int i = 0; i < current_depth; i++) //Print out a space depending on the depth of the node, so nodes that are deeper in the tree will be farther from the left of the screen
+		std::cout << "     ";
+	if (root->red == -1){ //If the node is red, then print it as red text
+		if(root->data == search)
+			std::cout << "\033[1;34m" << root->data << "\033[0m" << std::endl;
+		else
+			std::cout << "\033[1;31m" << root->data << "\033[0m" << std::endl;
+	}else{ //If the node is black print it as white text
+		if(root->data == search)
+			std::cout << "\033[1;34m" << root->data << "\033[0m" << std::endl;
+		else
+			std::cout << root->data << std::endl;
+	}
+	if(root->left != 0) //Go left
+		print(root->left, current_depth + 1, search);
+}
 //This function changes the color of the node if necessary and will also rebalance it if needed.
 // It's recursive and skips generations up to the root node
 void Tree::balance(Node* leaf){
