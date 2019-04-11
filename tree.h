@@ -11,12 +11,8 @@ class Tree {
 		int blackheight, height, size;
 
 		Node* search(int);
-		void balance(Node* root);
-		void colorchange(Node*);
+		void balance(Node*);
 		Node* getuncle(Node* node);
-
-		void rotate(Node*);
-		void shift(Node*);
 	public:
 		Tree();
 		Node* root;

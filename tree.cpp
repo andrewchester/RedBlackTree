@@ -1,5 +1,4 @@
 #include <iostream>
-#include <windows.h>
 #include "tree.h"
 
 Tree::Tree(){
@@ -7,19 +6,6 @@ Tree::Tree(){
 	root = 0;
 	blackheight = 0;
 	height = 0;
-}
-void Tree::shift(Node* node){
-	Node* parent = node->parent;
-	Node* opposite = 0;
-	if(parent->left == node){
-		opposite = parent->right;
-		parent->left = opposite;
-		parent->right = node;
-	}else{
-		opposite = parent->left;
-		parent->right = opposite;
-		parent->right = node;
-	}
 }
 Tree::Node* Tree::getuncle(Node* node){
 	if(node->parent != 0 && node->parent->parent != 0){
@@ -34,15 +20,12 @@ Tree::Node* Tree::getuncle(Node* node){
 
 
 void Tree::print(Node* root, int current_depth){
-	HANDLE hConsole = GetStdHandle(STD_OUTPUT_HANDLE);
 	if(root->right != 0)
 		print(root->right, current_depth + 1);
 	for(int i = 0; i < current_depth; i++)
 		std::cout << "     ";
 	if (root->red == -1){
-		SetConsoleTextAttribute(hConsole, 12);
-		std::cout << root->data << std::endl;
-		SetConsoleTextAttribute(hConsole, 15);
+		std::cout << "\033[1;31m" << root->data << "\033[0m" << std::endl;
 	}else{
 		std::cout << root->data << std::endl;
 	}
@@ -50,23 +33,75 @@ void Tree::print(Node* root, int current_depth){
 		print(root->left, current_depth + 1);
 }
 
-void Tree::colorchange(Node* leaf){
+void Tree::balance(Node* leaf){
 	Node* parent = leaf->parent;
 	Node* uncle = getuncle(leaf);
-	
-	if (parent != 0){
-		if (leaf->red == parent->red){
-			if(parent != 0)
-				parent->red *= -1;
-			if (uncle != 0){
-				if(uncle->left != 0 && uncle->red == uncle->left->red)
-					uncle->red *= -1;	
-				if(uncle->right != 0 && uncle->red == uncle->right->red)
-					uncle->red *= -1;
-				if(uncle->left == 0 && uncle->right == 0)
-					uncle->red *= -1;
+	Node* grandparent = 0;
+	if(parent->parent != 0) grandparent = parent->parent;
+
+	if(parent != 0 && (parent->red != 1 || leaf != root)){
+		if(uncle != 0 && uncle->red == -1){
+			parent->red = 1;
+			if(uncle != 0)
+				uncle->red = 1;
+			if(grandparent != 0){
+				grandparent->red = -1;
+				if (grandparent != root)
+					balance(grandparent);
 			}
-			colorchange(parent);
+		}
+		if(uncle == 0 || uncle->red == 1){
+			if(grandparent != 0 && grandparent->left == parent && parent->left == leaf){ //Left left case
+				parent->parent = grandparent->parent;
+				if (parent->parent == 0)
+					root = parent;
+				parent->right = grandparent;
+				grandparent->parent = parent;
+				grandparent->left = 0;
+				grandparent->red = -1;
+			}else if(grandparent != 0 && grandparent->left == parent && parent->right == leaf){ //Left right case
+				grandparent->left = leaf;
+				leaf->left = parent;
+				leaf->right = 0;
+				leaf->parent = grandparent;
+				parent->left = 0;
+				parent->right = 0;
+				parent->parent = leaf;
+
+				//Repeat left left case
+				parent->parent = grandparent->parent;
+				if (parent->parent == 0)
+					root = parent;
+				parent->right = grandparent;
+				grandparent->parent = parent;
+				grandparent->left = 0;
+				grandparent->red = -1;
+			}else if(grandparent != 0 && grandparent->right == parent && parent->right == leaf){ //Right right case
+				parent->parent = grandparent->parent;
+				if (parent->parent == 0)
+					root = parent;
+				parent->left = grandparent;
+				grandparent->parent = parent;
+				grandparent->right = 0;
+				grandparent->red = -1;
+			}else if(grandparent != 0 && grandparent->right == parent && parent->left == leaf){ //Right left case
+				grandparent->right = leaf;
+				leaf->right = parent;
+				leaf->left = 0;
+				leaf->parent = grandparent;
+				parent->left = 0;
+				parent->right = 0;
+				parent->parent = leaf;
+
+				//Mirror right right case
+				parent->parent = grandparent->parent;
+				if (parent->parent == 0)
+					root = parent;
+				parent->left = grandparent;
+				grandparent->parent = parent;
+				grandparent->right = 0;
+				grandparent->red = -1;
+			}
 		}
 	}
 }
@@ -95,22 +130,8 @@ void Tree::insert(int data){
 				newnode->parent = current;
 				current->right = newnode;
 				size++;
-
-				if(newnode->parent->red == newnode->red){
-					if(newnode->parent->left == newnode && newnode->parent->right == 0){
-						Node* grandparent = newnode->parent->parent;
-						Node* parent = newnode->parent;
-
-						if(grandparent->parent != 0)
-							parent->parent = grandparent->parent;
-						else
-							parent->parent = 0;
-						
-						parent->right = grandparent;
-					}
-				}
-				if(newnode->parent->red == -1)
-					colorchange(newnode);
+				
+				balance(newnode);
 				root->red = 1;
 
 				break;
@@ -126,22 +147,7 @@ void Tree::insert(int data){
 				current->left = newnode;
 				size++;
 				
-				if(newnode->parent->red == newnode->red){
-					if(newnode->parent->left == newnode && newnode->parent->right == 0){
-						Node* grandparent = newnode->parent->parent;
-						Node* parent = newnode->parent;
-
-						parent->right = grandparent;
-						parent->parent = grandparent->parent;
-						if(grandparent->parent != 0 && grandparent->parent->left == grandparent)
-							grandparent->parent->left = parent;
-						else if(grandparent->parent != 0)
-							grandparent->parent->right = parent;
-						grandparent->parent = parent;
-					}
-				}
-				if(newnode->parent->red == -1)
-					colorchange(newnode);
+				balance(newnode);
 				root->red = 1;
 				break;
 			}
