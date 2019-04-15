@@ -46,7 +46,7 @@ void Tree::print(Node* root, int current_depth){
 	if(root->right != 0) //If we can go right, go right. The function goes all the way to the right of the tree first, printing it out with the right at the top, and left at the bottom
 		print(root->right, current_depth + 1);
 	for(int i = 0; i < current_depth; i++) //Print out a space depending on the depth of the node, so nodes that are deeper in the tree will be farther from the left of the screen
-		std::cout << "     ";
+		std::cout << "   ";
 	if (root->red == -1){ //If the node is red, then print it as red text
 		std::cout << "\033[1;31m" << root->data << "\033[0m" << std::endl;
 	}else{ //If the node is black print it as white text
@@ -59,7 +59,7 @@ void Tree::print(Node* root, int current_depth, int search){
 	if(root->right != 0) //If we can go right, go right. The function goes all the way to the right of the tree first, printing it out with the right at the top, and left at the bottom
 		print(root->right, current_depth + 1, search);
 	for(int i = 0; i < current_depth; i++) //Print out a space depending on the depth of the node, so nodes that are deeper in the tree will be farther from the left of the screen
-		std::cout << "     ";
+		std::cout << "   ";
 	if (root->red == -1){ //If the node is red, then print it as red text
 		if(root->data == search)
 			std::cout << "\033[1;34m" << root->data << "\033[0m" << std::endl;
