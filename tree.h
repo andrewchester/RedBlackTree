@@ -10,6 +10,9 @@ class Tree {
 
 		int blackheight, height, size;
 
+		void rotate_right(Node* leaf);
+		void rotate_left(Node* leaf);
+
 		void balance(Node*); //Balances and recolors a tree from a given node
 		Node* getuncle(Node* node); //Returns the uncle of a node
 	public:
