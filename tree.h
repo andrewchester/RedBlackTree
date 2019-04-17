@@ -13,6 +13,7 @@ class Tree {
 		void rotate_right(Node* leaf);
 		void rotate_left(Node* leaf);
 
+		Node* find_inorder(Node* node, Node* leaf, int, int);
 		void balance(Node*); //Balances and recolors a tree from a given node
 		Node* getuncle(Node* node); //Returns the uncle of a node
 	public:

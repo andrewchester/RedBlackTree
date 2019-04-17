@@ -206,6 +206,59 @@ void Tree::balance(Node* leaf){
 			balance(grandparent);
 	}
 }
+Tree::Node* Tree::find_inorder(Node* node, Node* leaf, int left, int right){
+	if(node->data >= left && node->data <= right && node != leaf)
+		return node;
+	Node* next = find_inorder(node->right, leaf, left, right);
+	if(next) return next;
+	next = find_inorder(node->left, leaf, left, right);
+	if(next) return next;
+	return 0;
+}
+
+void Tree::remove(int num){
+	Node* leaf = search(num);
+	Node* parent = leaf->parent;
+	Node* sibling = 0;
+	Node* grandparent = 0;
+	if(parent != 0 && parent->left == leaf){
+		sibling = parent->right;
+		grandparent = parent->parent;
+	}else if(parent != 0){
+		sibling = parent->left;
+		grandparent = parent->parent;
+	}
+	
+	if(leaf->left == 0 && leaf->right == 0){
+		if(parent->left == leaf)
+			parent->left = 0;
+		else
+			parent->right = 0;
+		leaf->parent = 0;
+		delete leaf;
+	}else if(leaf->left == 0 && leaf->right != 0){
+		leaf->data = leaf->right->data;
+		leaf->right->parent = 0;
+		delete leaf->right;
+		leaf->right = 0;
+	}else if(leaf->left != 0 && leaf->right == 0){
+		leaf->data = leaf->left->data;
+		leaf->left->parent = 0;
+		delete leaf->left;
+		leaf->left = 0;
+	}else if(leaf->left != 0 && leaf->right != 0){
+		Node* inorder = find_inorder(leaf, leaf, leaf->left->data, leaf->right->data);
+		std::cout << "inorder: " << inorder << ", data: " << inorder->data << std::endl;
+		leaf->data = inorder->data;
+		if(inorder->parent->left == inorder)
+			inorder->parent->left = 0;
+		else
+			inorder->parent->right = 0;
+		inorder->parent = 0;
+		delete inorder;
+	}
+}
+
 //This function handles inserting data
 void Tree::insert(int data){
 	if(size == 0){ //If this is the root node, set up root as a new node
