@@ -206,12 +206,12 @@ void Tree::balance(Node* leaf){
 			balance(grandparent);
 	}
 }
-Tree::Node* Tree::find_inorder(Node* node, Node* leaf, int left, int right){
-	if(node->data >= left && node->data <= right && node != leaf)
+Tree::Node* Tree::find_inorder(Node* node, Node* leaf, int right){
+	if(node->data >= left && node->data <= right && node->right == 0 && node->left == 0)
 		return node;
-	Node* next = find_inorder(node->right, leaf, left, right);
+	Node* next = find_inorder(node->right, left, right);
 	if(next) return next;
-	next = find_inorder(node->left, leaf, left, right);
+	next = find_inorder(node->left, left, right);
 	if(next) return next;
 	return 0;
 }
@@ -247,7 +247,7 @@ void Tree::remove(int num){
 		delete leaf->left;
 		leaf->left = 0;
 	}else if(leaf->left != 0 && leaf->right != 0){
-		Node* inorder = find_inorder(leaf, leaf, leaf->left->data, leaf->right->data);
+		Node* inorder = find_inorder(leaf, leaf, leaf->right->data);
 		std::cout << "inorder: " << inorder << ", data: " << inorder->data << std::endl;
 		leaf->data = inorder->data;
 		if(inorder->parent->left == inorder)
