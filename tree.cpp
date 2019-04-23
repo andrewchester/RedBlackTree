@@ -13,10 +13,20 @@ Tree::Tree(){
 }
 //This function gets the uncle of a node, returns 0 if there is no uncle
 Tree::Node* Tree::getuncle(Node* node){
-	if(node->parent != 0 && node->parent->parent != 0){ //If the parent exists and the grandparent exists
-		if (node->parent->parent->left == node->parent){ //If the parent is the left node
+	if
+	(
+	node->parent != 0 && node->parent->parent != 0
+	)
+	{ //If the parent exists and the grandparent exists
+		if 
+		(
+		node->parent->parent->left == node->parent
+		)
+		{ //If the parent is the left node
 			return node->parent->parent->right; //Return the right node as the uncle
-		}else{
+		}
+		else
+		{
 			return node->parent->parent->left; //Otherwise the left node is the uncle
 		}
 	}
@@ -179,7 +189,7 @@ void Tree::balance(Node* leaf){
 				uncle = getuncle(leaf);
 				if(parent->parent != 0) grandparent = parent->parent;
 			}else if(grandparent != 0 && grandparent->right == parent && parent->left == leaf){ //Right left case, which is a mirror of left right, and runs when the leaf is left of parent and parent is right of grandparent
-			//The goal, as with left right, is to rotate the tree so that we can run right right again
+				//The goal, as with left right, is to rotate the tree so that we can run right right again
 				grandparent->right = leaf; //Set the grandparent's right subtree to the leaf
 				leaf->parent = grandparent; //Set the leaf's parent to the grandparent
 				parent->left = leaf->right; //Set the parent's left subtree to the leaf's right subtree
@@ -193,8 +203,36 @@ void Tree::balance(Node* leaf){
 				uncle = getuncle(leaf);
 				if(parent->parent != 0) grandparent = parent->parent;
 
+				//print(root, 0);
+				std::cout << "right right in right left" << std::endl;
+				print(root, 0);
 				//Repeat right right case
-				rotate_right(leaf);
+				//Defining the nodes: parent, uncle, and grandparent in relation to the leaf node passed in
+				Node* parent = leaf->parent; 
+				Node* uncle = getuncle(leaf);
+				Node* grandparent = 0;
+				if(parent->parent != 0) grandparent = parent->parent;
+
+
+				std::cout << "leaf: " << leaf->data << " parent: " << parent->data << " grandparent: " << grandparent->data << std::endl;
+				std::cout << "great-grandparent: " << grandparent->parent->data  << " great grandparent right: " << grandparent->parent->right->data << std::endl; 
+
+				parent->parent = grandparent->parent; //Set the parent's parent to the great grandparent
+				if(grandparent->parent != 0){ //If the great grandparent exists
+					if(grandparent->parent->right == grandparent) //Test which subtree is the grandparent is on, left or right
+						grandparent->parent->right = parent; //Set its right subtree to the parent
+					else
+						grandparent->parent->left = parent; //Set its right subtree to the parent
+				}
+				if (parent->parent == 0) //If the great grandparent doesn't exist, then parent is the new root node
+					root = parent;
+				grandparent->right = parent->left; //Set the grandparent's right subtree to the parent's left subtree
+				if(parent->left != 0)
+					parent->left->parent = grandparent; //Set the parent's left subtree's parent to the grandparent
+				parent->left = grandparent; //Set the parent's left subtree to the grandparent
+				grandparent->parent = parent; //Set the grandparent's parent to parent
+				grandparent->red = -1; //Make the grandparent red
+				parent->red = 1; //Make the parent black
 
 				//Reset values since the grandparent got sifted down
 				parent = leaf->parent;
@@ -206,7 +244,7 @@ void Tree::balance(Node* leaf){
 			balance(grandparent);
 	}
 }
-Tree::Node* Tree::find_inorder(Node* node, Node* leaf, int right){
+Tree::Node* Tree::find_inorder(Node* node, int left, int right){
 	if(node->data >= left && node->data <= right && node->right == 0 && node->left == 0)
 		return node;
 	Node* next = find_inorder(node->right, left, right);
@@ -247,7 +285,7 @@ void Tree::remove(int num){
 		delete leaf->left;
 		leaf->left = 0;
 	}else if(leaf->left != 0 && leaf->right != 0){
-		Node* inorder = find_inorder(leaf, leaf, leaf->right->data);
+		Node* inorder = find_inorder(leaf, leaf->left->data, leaf->right->data);
 		std::cout << "inorder: " << inorder << ", data: " << inorder->data << std::endl;
 		leaf->data = inorder->data;
 		if(inorder->parent->left == inorder)

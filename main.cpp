@@ -53,6 +53,7 @@ int main(){
 				from_file(&t, filepath);
 				delete[] filepath;
 				t.print(t.root, 0); //Print after it adds the numbers
+
 			}else if(strcmp(input, "manual") == 0){ //If they're being manually entered
 				char* number = new char[10];
 				while(true){ //Keep reading in numbers from the user as long as they're entering them
@@ -65,6 +66,7 @@ int main(){
 						break; //Leave when they type exit
 					t.insert(atoi(number));
 					t.print(t.root, 0); //Print after it adds them
+
 				}
 				delete[] number;
 			}
