@@ -13,20 +13,11 @@ Tree::Tree(){
 }
 //This function gets the uncle of a node, returns 0 if there is no uncle
 Tree::Node* Tree::getuncle(Node* node){
-	if
-	(
-	node->parent != 0 && node->parent->parent != 0
-	)
-	{ //If the parent exists and the grandparent exists
-		if 
-		(
-		node->parent->parent->left == node->parent
-		)
-		{ //If the parent is the left node
+	if(node->parent != 0 && node->parent->parent != 0){ //If the parent exists and the grandparent exists
+		if (node->parent->parent->left == node->parent){ //If the parent is the left node
 			return node->parent->parent->right; //Return the right node as the uncle
 		}
-		else
-		{
+		else{
 			return node->parent->parent->left; //Otherwise the left node is the uncle
 		}
 	}
@@ -58,9 +49,23 @@ void Tree::print(Node* root, int current_depth){
 	for(int i = 0; i < current_depth; i++) //Print out a space depending on the depth of the node, so nodes that are deeper in the tree will be farther from the left of the screen
 		std::cout << "   ";
 	if (root->red == -1){ //If the node is red, then print it as red text
-		std::cout << "\033[1;31m" << root->data << "\033[0m" << std::endl;
+		std::cout << "\033[1;31m" << root->data << "(";
+		if (root->parent != 0)
+			std::cout << "p:" << root->parent->data << " ";
+		if(root->left != 0)
+			std::cout << "l:" << root->left->data << " ";
+		if(root->right != 0)
+			std::cout << "r:" << root->right->data;
+		std::cout << ")" << "\033[0m" << std::endl;
 	}else{ //If the node is black print it as white text
-		std::cout << root->data << std::endl;
+		std::cout << root->data << "(";
+		if (root->parent != 0)
+			std::cout << "p:" << root->parent->data << " ";
+		if(root->left != 0)
+			std::cout << "l:" << root->left->data << " ";
+		if(root->right != 0)
+			std::cout << "r:" << root->right->data;
+		std::cout << ")" << std::endl;
 	}
 	if(root->left != 0) //Go left
 		print(root->left, current_depth + 1);
@@ -91,6 +96,8 @@ void Tree::rotate_left(Node* leaf){
 	Node* grandparent = 0;
 	if(parent->parent != 0) grandparent = parent->parent;
 
+	std::cout << "Leaf: " << leaf->data << " Parent: " << parent->data << std::endl;
+
 	parent->parent = grandparent->parent; //Set the parent's parent to the grandparent's parent, elevating the parent to the grandparent's position
 	if(grandparent->parent != 0){ //If the grandparent's parent exists
 		if(grandparent->parent->right == grandparent) //Test which subtree is the grandparent is on, left or right
@@ -114,6 +121,8 @@ void Tree::rotate_right(Node* leaf){
 	Node* uncle = getuncle(leaf);
 	Node* grandparent = 0;
 	if(parent->parent != 0) grandparent = parent->parent;
+
+	std::cout << "Leaf: " << leaf->data << " Parent: " << parent->data << std::endl;
 
 	parent->parent = grandparent->parent; //Set the parent's parent to the great grandparent
 	if(grandparent->parent != 0){ //If the great grandparent exists
@@ -203,8 +212,6 @@ void Tree::balance(Node* leaf){
 				uncle = getuncle(leaf);
 				if(parent->parent != 0) grandparent = parent->parent;
 
-				//print(root, 0);
-				std::cout << "right right in right left" << std::endl;
 				print(root, 0);
 				//Repeat right right case
 				//Defining the nodes: parent, uncle, and grandparent in relation to the leaf node passed in
@@ -212,10 +219,6 @@ void Tree::balance(Node* leaf){
 				Node* uncle = getuncle(leaf);
 				Node* grandparent = 0;
 				if(parent->parent != 0) grandparent = parent->parent;
-
-
-				std::cout << "leaf: " << leaf->data << " parent: " << parent->data << " grandparent: " << grandparent->data << std::endl;
-				std::cout << "great-grandparent: " << grandparent->parent->data  << " great grandparent right: " << grandparent->parent->right->data << std::endl; 
 
 				parent->parent = grandparent->parent; //Set the parent's parent to the great grandparent
 				if(grandparent->parent != 0){ //If the great grandparent exists
