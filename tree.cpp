@@ -117,12 +117,11 @@ void Tree::rotate_left(Node* leaf){
 }
 void Tree::rotate_right(Node* leaf){
 	//Defining the nodes: parent, uncle, and grandparent in relation to the leaf node passed in
+	std::cout << "Right rotation on " << leaf->data << std::endl;
 	Node* parent = leaf->parent; 
 	Node* uncle = getuncle(leaf);
 	Node* grandparent = 0;
 	if(parent->parent != 0) grandparent = parent->parent;
-
-	std::cout << "Leaf: " << leaf->data << " Parent: " << parent->data << std::endl;
 
 	parent->parent = grandparent->parent; //Set the parent's parent to the great grandparent
 	if(grandparent->parent != 0){ //If the great grandparent exists
@@ -138,6 +137,7 @@ void Tree::rotate_right(Node* leaf){
 		parent->left->parent = grandparent; //Set the parent's left subtree's parent to the grandparent
 	parent->left = grandparent; //Set the parent's left subtree to the grandparent
 	grandparent->parent = parent; //Set the grandparent's parent to parent
+	//grandparent->left = leaf;
 	grandparent->red = -1; //Make the grandparent red
 	parent->red = 1; //Make the parent black
 }
@@ -149,6 +149,7 @@ void Tree::balance(Node* leaf){
 	Node* uncle = getuncle(leaf);
 	Node* grandparent = 0;
 	if(parent->parent != 0) grandparent = parent->parent;
+	std::cout << "Leaf: " << leaf->data << std::endl;
 
 	if(parent != 0 && (parent->red != 1 || leaf != root)){ //If the parent exists and either the leaf isn't the root or the parent is red, then we're either going to change the color of nodes or balance the tree
 		if(uncle != 0 && uncle->red == -1 && parent->red == -1){ //If the uncle is red and the parent is red, then we need to change the color of the nodes
@@ -179,9 +180,6 @@ void Tree::balance(Node* leaf){
 
 				//Reset values since the parent got sifted down
 				leaf = parent;
-				parent = leaf->parent;
-				uncle = getuncle(leaf);
-				if(parent->parent != 0) grandparent = parent->parent;
 
 				//Repeat left left case from before
 				rotate_left(leaf);
@@ -198,6 +196,7 @@ void Tree::balance(Node* leaf){
 				uncle = getuncle(leaf);
 				if(parent->parent != 0) grandparent = parent->parent;
 			}else if(grandparent != 0 && grandparent->right == parent && parent->left == leaf){ //Right left case, which is a mirror of left right, and runs when the leaf is left of parent and parent is right of grandparent
+				std::cout << "Right left Leaf: " << leaf->data << std::endl;
 				//The goal, as with left right, is to rotate the tree so that we can run right right again
 				grandparent->right = leaf; //Set the grandparent's right subtree to the leaf
 				leaf->parent = grandparent; //Set the leaf's parent to the grandparent
@@ -205,37 +204,12 @@ void Tree::balance(Node* leaf){
 				leaf->right = parent; //Set the leaf's right subtree to the parent
 				parent->parent = leaf; //Set the parent's parent to leaf
 				//Now it should look like right right
-
-				//Reset values since the parent got sifted down
-				leaf = parent;
-				parent = leaf->parent;
-				uncle = getuncle(leaf);
-				if(parent->parent != 0) grandparent = parent->parent;
-
 				print(root, 0);
-				//Repeat right right case
-				//Defining the nodes: parent, uncle, and grandparent in relation to the leaf node passed in
-				Node* parent = leaf->parent; 
-				Node* uncle = getuncle(leaf);
-				Node* grandparent = 0;
-				if(parent->parent != 0) grandparent = parent->parent;
 
-				parent->parent = grandparent->parent; //Set the parent's parent to the great grandparent
-				if(grandparent->parent != 0){ //If the great grandparent exists
-					if(grandparent->parent->right == grandparent) //Test which subtree is the grandparent is on, left or right
-						grandparent->parent->right = parent; //Set its right subtree to the parent
-					else
-						grandparent->parent->left = parent; //Set its right subtree to the parent
-				}
-				if (parent->parent == 0) //If the great grandparent doesn't exist, then parent is the new root node
-					root = parent;
-				grandparent->right = parent->left; //Set the grandparent's right subtree to the parent's left subtree
-				if(parent->left != 0)
-					parent->left->parent = grandparent; //Set the parent's left subtree's parent to the grandparent
-				parent->left = grandparent; //Set the parent's left subtree to the grandparent
-				grandparent->parent = parent; //Set the grandparent's parent to parent
-				grandparent->red = -1; //Make the grandparent red
-				parent->red = 1; //Make the parent black
+				leaf = parent;
+
+				//Repeat right right case
+				rotate_right(leaf);
 
 				//Reset values since the grandparent got sifted down
 				parent = leaf->parent;
@@ -336,6 +310,8 @@ void Tree::insert(int data){
 		current->right = newnode;
 	size++;
 	//Balance the node and always make the root black
+	if (data == 17 || data == 15)
+		print(root, 0);
 	balance(newnode);
 	root->red = 1;
 }
