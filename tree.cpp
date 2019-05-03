@@ -51,6 +51,8 @@ void Tree::print(Node* root, int current_depth){
 	for(int i = 0; i < current_depth; i++) //Print out a space depending on the depth of the node, so nodes that are deeper in the tree will be farther from the left of the screen
 		std::cout << "   ";
 	if (root->red == -1){ //If the node is red, then print it as red text
+		std::cout << "\033[1;31m" << root->data << "\033[0m" << std::endl;
+		/*
 		std::cout << "\033[1;31m" << root->data << "(";
 		if (root->parent != 0)
 			std::cout << "p:" << root->parent->data << " ";
@@ -58,8 +60,11 @@ void Tree::print(Node* root, int current_depth){
 			std::cout << "l:" << root->left->data << " ";
 		if(root->right != 0)
 			std::cout << "r:" << root->right->data;
-		std::cout << ")" << "\033[0m" << std::endl;
+		std::cout << ")" "\033[1;31m" << root->data <<
+		*/
 	}else{ //If the node is black print it as white text
+		std::cout << root->data << std::endl;
+		/*
 		std::cout << root->data << "(";
 		if (root->parent != 0)
 			std::cout << "p:" << root->parent->data << " ";
@@ -68,6 +73,7 @@ void Tree::print(Node* root, int current_depth){
 		if(root->right != 0)
 			std::cout << "r:" << root->right->data;
 		std::cout << ")" << std::endl;
+		*/
 	}
 	if(root->left != 0) //Go left
 		print(root->left, current_depth + 1);
@@ -98,8 +104,6 @@ void Tree::rotate_left(Node* leaf){
 	Node* grandparent = 0;
 	if(parent->parent != 0) grandparent = parent->parent;
 
-	std::cout << "Leaf: " << leaf->data << " Parent: " << parent->data << std::endl;
-
 	parent->parent = grandparent->parent; //Set the parent's parent to the grandparent's parent, elevating the parent to the grandparent's position
 	if(grandparent->parent != 0){ //If the grandparent's parent exists
 		if(grandparent->parent->right == grandparent) //Test which subtree is the grandparent is on, left or right
@@ -119,7 +123,8 @@ void Tree::rotate_left(Node* leaf){
 }
 void Tree::rotate_right(Node* leaf){
 	//Defining the nodes: parent, uncle, and grandparent in relation to the leaf node passed in
-	std::cout << "Right rotation on " << leaf->data << std::endl;
+	if(leaf->data == 14 || leaf->data == 17)
+		print(root, 0);
 	Node* parent = leaf->parent; 
 	Node* uncle = getuncle(leaf);
 	Node* grandparent = 0;
@@ -175,6 +180,8 @@ void Tree::balance(Node* leaf){
 				grandparent->left = leaf; //Set the grandparent's left subtree to the leaf
 				leaf->parent = grandparent; //Set the parent of the leaf to the grandparent
 				parent->right = leaf->left; //Set the parent's right subtree to the leaf's left subtree
+				if(leaf->left != 0)
+					leaf->left->parent = parent; //Set the leaf's right node's parent to parent
 				leaf->left = parent; //Set the leaf's left subtree to its parent
 				parent->parent = leaf; //Let the parent's parent to leaf
 				//The leaf and the parent now should've switched places with no right substrees, so left left can be run successfully
@@ -197,18 +204,15 @@ void Tree::balance(Node* leaf){
 				uncle = getuncle(leaf);
 				if(parent->parent != 0) grandparent = parent->parent;
 			}else if(grandparent != 0 && grandparent->right == parent && parent->left == leaf){ //Right left case, which is a mirror of left right, and runs when the leaf is left of parent and parent is right of grandparent
-				if (leaf->data == 14)
-					print(root, 0);
-				else
-					std::cout << "Right left Leaf: " << leaf->data << std::endl;
 				//The goal, as with left right, is to rotate the tree so that we can run right right again
 				grandparent->right = leaf; //Set the grandparent's right subtree to the leaf
 				leaf->parent = grandparent; //Set the leaf's parent to the grandparent
 				parent->left = leaf->right; //Set the parent's left subtree to the leaf's right subtree
+				if(leaf->right != 0)
+					leaf->right->parent = parent; //Set the leaf's right node's parent to parent
 				leaf->right = parent; //Set the leaf's right subtree to the parent
 				parent->parent = leaf; //Set the parent's parent to leaf
 				//Now it should look like right right
-				print(root, 0);
 
 				leaf = parent;
 
@@ -228,14 +232,24 @@ void Tree::balance(Node* leaf){
 Tree::Node* Tree::find_inorder(Node* node, int left, int right){
 	if(node->data >= left && node->data <= right && node->right == 0 && node->left == 0)
 		return node;
-	Node* next = find_inorder(node->right, left, right);
+	Node* next;
+	
+	if(node->right != 0)
+		next = find_inorder(node->right, left, right);
 	if(next) return next;
-	next = find_inorder(node->left, left, right);
+	
+	if(node->left != 0)
+		next = find_inorder(node->left, left, right);
 	if(next) return next;
 	return 0;
 }
 
 void Tree::remove(int num){
+	if(search(num) == 0){
+		std::cout << num << " is not in the tree" << std::endl;
+		return;
+	}
+
 	Node* leaf = search(num);
 	Node* parent = leaf->parent;
 	Node* sibling = 0;
@@ -269,13 +283,20 @@ void Tree::remove(int num){
 		Node* inorder = find_inorder(leaf, leaf->left->data, leaf->right->data);
 		std::cout << "inorder: " << inorder << ", data: " << inorder->data << std::endl;
 		leaf->data = inorder->data;
-		if(inorder->parent->left == inorder)
-			inorder->parent->left = 0;
-		else
-			inorder->parent->right = 0;
+		std::cout << 
+		if(inorder != 0){
+			if(inorder->parent != 0 && inorder->parent->left != 0){
+				if(inorder->parent->left == inorder)
+					inorder->parent->left = 0;
+				else
+					inorder->parent->right = 0;
+			}
+		}
 		inorder->parent = 0;
 		delete inorder;
 	}
+	if(leaf->parent = 0)
+		root = leaf;
 }
 
 //This function handles inserting data
