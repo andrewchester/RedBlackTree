@@ -408,12 +408,14 @@ void Tree::remove(int num){
 			sparent->right = lnphew;
 			lnphew->right = sibling;
 			sibling->parent = lnphew;
+			sibling->right = lnphew->right;
 
 			lnphew->red = 1;
 			sibling->red = -1;
 
 			sibling = lnphew;
 			sparent = sibling->parent;
+			rnphew = sibling->right;
 
 			sparent->right = sibling->left;
 			if(sibling->left != 0)
@@ -421,7 +423,7 @@ void Tree::remove(int num){
 			sibling->left = sparent;
 			if(sparent->parent == 0){
 				root = sibling;
-				sibling->parent = sparent->parent;
+				sibling->parent = 0;
 			}else{
 				if(sparent->parent->left == sparent) sparent->parent->left = sibling;
 				else sparent->parent->right = sibling;
