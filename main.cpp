@@ -92,6 +92,7 @@ int main(){
 
 			t.remove(atoi(number));
 			delete[] number;
+			t.print(t.root, 0);
 		}else if(strcmp(input, "exit") == 0){
 			break; //Leave when they type exit
 		}else if(strcmp(input, "print") == 0){

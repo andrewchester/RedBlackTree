@@ -8,8 +8,6 @@
 Tree::Tree(){
 	size = 0;
 	root = 0;
-	blackheight = 0;
-	height = 0;
 }
 //This function gets the uncle of a node, returns 0 if there is no uncle
 Tree::Node* Tree::getuncle(Node* node){
@@ -24,6 +22,12 @@ Tree::Node* Tree::getuncle(Node* node){
 		}
 	}
 	return 0;
+}
+
+Tree::Node* Tree::getsibling(Node* node){
+	if(node->parent == 0) return 0;
+	if(on_left(node)) return node->parent->right;
+	else return node->parent->left;
 }
 
 Tree::Node* Tree::search(int data){
@@ -123,8 +127,6 @@ void Tree::rotate_left(Node* leaf){
 }
 void Tree::rotate_right(Node* leaf){
 	//Defining the nodes: parent, uncle, and grandparent in relation to the leaf node passed in
-	if(leaf->data == 14 || leaf->data == 17)
-		print(root, 0);
 	Node* parent = leaf->parent; 
 	Node* uncle = getuncle(leaf);
 	Node* grandparent = 0;
@@ -229,81 +231,218 @@ void Tree::balance(Node* leaf){
 			balance(grandparent);
 	}
 }
-Tree::Node* Tree::find_inorder(Node* node, int left, int right){
-	if(node->data >= left && node->data <= right && node->right == 0 && node->left == 0)
-		return node;
-	Node* next;
-	
-	if(node->right != 0)
-		next = find_inorder(node->right, left, right);
-	if(next) return next;
-	
-	if(node->left != 0)
-		next = find_inorder(node->left, left, right);
-	if(next) return next;
-	return 0;
+Tree::Node* Tree::find_inorder(Node* current){
+	if(current->left != 0)
+		return find_inorder(current->left);
+	else
+		return current;
+}
+void Tree::one_child(Node* child){
+	Node* leaf = child->parent;
+	Node* parent = leaf->parent;
+	if(parent != 0){
+		if(parent->left == leaf) parent->left = child;
+		else parent->right = child;
+		
+		child->parent = parent;
+	}else{
+		root = leaf->right;
+		child->parent = 0;
+	}
+}
+bool Tree::on_left(Node* node){
+	return (node->parent->left == node);
 }
 
+/*
+	if(leaf->left == 0 && leaf->right == 0){ //Leaf has no children
+		if(leaf->data == root->data){
+			delete leaf;
+			return;
+		}
+		if(on_left(leaf))
+			parent->left = 0;
+		else
+			parent->right = 0;
+		delete leaf;
+		root->red = 1;
+	}else if(leaf->left == 0 && leaf->right != 0){ //Leaf has one right child
+		one_child(leaf->right);
+		if (leaf->right->red == -1 && parent->red == -1)
+			leaf->right->red = 1;
+
+		delete leaf;
+	}else if(leaf->left != 0 && leaf->right == 0){ //Leaf has one left child
+		one_child(leaf->left);
+
+		if(leaf->left->red == -1 && parent->red == -1)
+			leaf->left->red = 1;
+
+		delete leaf;
+	}else if(leaf->left != 0 && leaf->right != 0){ //Leaf has 2 children
+		Node* successor = find_inorder(leaf->right);
+		if(leaf->right == successor){ //Successor is the immediate right child
+			successor->parent = leaf->parent;
+			if(parent != 0){
+				if (!on_left(leaf)) parent->right = successor;
+				else parent->left = successor;
+			}else{
+				root = successor;
+			}
+			successor->left = leaf->left;
+			successor->left->parent = successor;
+			
+			if(successor->red == 1 && successor->right != 0)
+				successor->right->secondary == 1;
+			successor->red = leaf->red;
+
+			delete leaf;
+		}else{ //Successor is not its child
+			leaf->data = successor->data;
+			if(successor->right != 0){
+				successor->parent->left = successor->right;
+				successor->right->parent = successor->parent;
+			}
+			if(successor->red == 1)
+				successor->right->secondary = 1;
+			successor->parent->left = 0;
+			delete successor;
+		}
+	}
+	*/
+
 void Tree::remove(int num){
+	if(root->data == num && size == 1){
+		delete root;
+		return;
+	}
 	if(search(num) == 0){
 		std::cout << num << " is not in the tree" << std::endl;
 		return;
 	}
-
-	Node* leaf = search(num);
+	Node* leaf = search(num); 
 	Node* parent = leaf->parent;
-	Node* sibling = 0;
-	Node* grandparent = 0;
-	if(parent != 0 && parent->left == leaf){
-		sibling = parent->right;
-		grandparent = parent->parent;
-	}else if(parent != 0){
-		sibling = parent->left;
-		grandparent = parent->parent;
-	}
+	Node* child = 0;
 	
 	if(leaf->left == 0 && leaf->right == 0){
-		if(parent->left == leaf)
-			parent->left = 0;
-		else
-			parent->right = 0;
-		leaf->parent = 0;
-		delete leaf;
-	}else if(leaf->left == 0 && leaf->right != 0){
-		leaf->data = leaf->right->data;
-		leaf->right->parent = 0;
-		delete leaf->right;
-		leaf->right = 0;
-	}else if(leaf->left != 0 && leaf->right == 0){
-		leaf->data = leaf->left->data;
-		leaf->left->parent = 0;
-		delete leaf->left;
-		leaf->left = 0;
-	}else if(leaf->left != 0 && leaf->right != 0){
-		Node* inorder = find_inorder(leaf, leaf->left->data, leaf->right->data);
-		std::cout << "inorder: " << inorder << ", data: " << inorder->data << std::endl;
-		leaf->data = inorder->data;
-		std::cout << 
-		if(inorder != 0){
-			if(inorder->parent != 0 && inorder->parent->left != 0){
-				if(inorder->parent->left == inorder)
-					inorder->parent->left = 0;
-				else
-					inorder->parent->right = 0;
-			}
-		}
-		inorder->parent = 0;
-		delete inorder;
-	}
-	if(leaf->parent = 0)
-		root = leaf;
-}
+		child = new Node();
+		child->parent = parent;
+		child->data = NULL;
+		child->red = NULL;
 
+		if(leaf->red == 1)
+			if(on_left(leaf)) parent->left = child;
+			else parent->right = child;
+		else
+			if(on_left(leaf)) parent->left = 0;
+			else parent->right = 0;
+	}else if((leaf->left != 0 || leaf->right != 0) && (leaf->left == 0 || leaf->right == 0)){
+		child = 0;
+		if (leaf->right != 0) child = leaf->right;
+		else child = leaf->left;
+
+		child->parent = parent;
+		if(parent != 0)
+			if(on_left(leaf)) parent->left = child;
+			else parent->right = child;
+		else
+			root = child;
+	}else if(leaf->left != 0 && leaf->right != 0){
+		child = find_inorder(leaf->right);
+		leaf->data = child->data;
+		if (leaf->right == child){
+			if(child->right != 0){
+				child->right->parent = leaf;
+				leaf->right = child->right;
+			}
+			delete child;
+		}else{
+			if(child->right != 0){
+				child->right->parent = child->parent;
+				child->parent->left = child->right;
+			}else{
+				child->parent->left = 0;
+			}
+			delete child;	
+		}
+	}
+	if(child != 0 && (leaf->red == -1 || child->red == -1)){
+		child->red = 1;
+	}else if(leaf->red == 1 && (child == 0 || child->red == 1 || child->red == NULL)){
+		Node* sibling = getsibling(child);
+		Node* rnphew = sibling->right;
+		Node* lnphew = sibling->left;
+
+		if(sibling->red == 1 && on_left(child) && (rnphew != 0 && rnphew->red == -1)){ //Right right
+			Node* sparent = sibling->parent;
+			sparent->right = sibling->left;
+			if(sibling->left != 0)
+				sibling->left->parent = sparent;
+			sibling->left = sparent;
+			if(sparent->parent == 0){
+				root = sibling;
+				sibling->parent = sparent->parent;
+			}else{
+				if(sparent->parent->left == sparent) sparent->parent->left = sibling;
+				else sparent->parent->right = sibling;
+			}
+			sparent->parent = sibling;
+			rnphew->red = 1;
+		}else if(sibling->red == 1 && !on_left(child) && lnphew->red == -1){ //Left left
+			Node* sparent = sibling->parent;
+			sparent->left = sibling->right;
+			sibling->right->parent = sparent;
+			sibling->right = sparent;
+			if(sparent->parent == 0){
+				root = sibling;
+				sibling->parent = sparent->parent;
+			}else{
+				if(sparent->parent->left == sparent) sparent->parent->left = sibling;
+				else sparent->parent->right = sibling;
+			}
+			sparent->parent = sibling;
+			lnphew->red = 1;
+		}else if(sibling->red == 1 && on_left(child) && (rnphew == 0 || rnphew->red == 1)){ //Right Left
+			Node* sparent = sibling->parent;
+			lnphew->parent = sparent;
+			sparent->right = lnphew;
+			lnphew->right = sibling;
+			sibling->parent = lnphew;
+
+			lnphew->red = 1;
+			sibling->red = -1;
+
+			sibling = lnphew;
+			sparent = sibling->parent;
+
+			sparent->right = sibling->left;
+			if(sibling->left != 0)
+				sibling->left->parent = sparent;
+			sibling->left = sparent;
+			if(sparent->parent == 0){
+				root = sibling;
+				sibling->parent = sparent->parent;
+			}else{
+				if(sparent->parent->left == sparent) sparent->parent->left = sibling;
+				else sparent->parent->right = sibling;
+			}
+			sparent->parent = sibling;
+			rnphew->red = 1;
+		}
+
+		if(child->red == NULL){
+			if(on_left(child)) child->parent->left = 0;
+			else child->parent->right = 0;
+			delete child;
+		}
+	}
+
+	size--;
+}
 //This function handles inserting data
 void Tree::insert(int data){
 	if(size == 0){ //If this is the root node, set up root as a new node
 		size++;
-		height++;
 		root = new Node();
 		root->data = data;
 		root->parent = 0;
