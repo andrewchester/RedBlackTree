@@ -83,6 +83,8 @@ void Tree::print(Node* root, int current_depth){
 		print(root->left, current_depth + 1);
 }
 void Tree::print(Node* root, int current_depth, int search){
+	if(root == 0)
+		return;
 	if(root->right != 0) //If we can go right, go right. The function goes all the way to the right of the tree first, printing it out with the right at the top, and left at the bottom
 		print(root->right, current_depth + 1, search);
 	for(int i = 0; i < current_depth; i++) //Print out a space depending on the depth of the node, so nodes that are deeper in the tree will be farther from the left of the screen
@@ -351,6 +353,7 @@ void Tree::remove(int num){
 		child = find_inorder(leaf->right);
 		leaf->data = child->data;
 		if (leaf->right == child){
+			leaf->right = child->right;
 			if(child->right != 0){
 				child->right->parent = leaf;
 				leaf->right = child->right;
@@ -363,7 +366,7 @@ void Tree::remove(int num){
 			}else{
 				child->parent->left = 0;
 			}
-			delete child;	
+			delete child;
 		}
 	}
 	if(child != 0 && (leaf->red == -1 || child->red == -1)){
@@ -374,6 +377,7 @@ void Tree::remove(int num){
 		Node* lnphew = sibling->left;
 
 		if(sibling->red == 1 && on_left(child) && (rnphew != 0 && rnphew->red == -1)){ //Right right
+			std::cout << "right right" << std::endl;
 			Node* sparent = sibling->parent;
 			sparent->right = sibling->left;
 			if(sibling->left != 0)
@@ -388,7 +392,8 @@ void Tree::remove(int num){
 			}
 			sparent->parent = sibling;
 			rnphew->red = 1;
-		}else if(sibling->red == 1 && !on_left(child) && lnphew->red == -1){ //Left left
+		}else if(sibling->red == 1 && !on_left(child) && (lnphew != 0 && lnphew->red == -1)){ //Left left
+			std::cout << "left left" << std::endl;
 			Node* sparent = sibling->parent;
 			sparent->left = sibling->right;
 			sibling->right->parent = sparent;
@@ -403,12 +408,14 @@ void Tree::remove(int num){
 			sparent->parent = sibling;
 			lnphew->red = 1;
 		}else if(sibling->red == 1 && on_left(child) && (rnphew == 0 || rnphew->red == 1)){ //Right Left
+			std::cout << "right left" << std::endl;
 			Node* sparent = sibling->parent;
 			lnphew->parent = sparent;
 			sparent->right = lnphew;
+			sibling->right = lnphew->right;
 			lnphew->right = sibling;
 			sibling->parent = lnphew;
-			sibling->right = lnphew->right;
+			sibling->left = lnphew->left;
 
 			lnphew->red = 1;
 			sibling->red = -1;
@@ -424,6 +431,35 @@ void Tree::remove(int num){
 			if(sparent->parent == 0){
 				root = sibling;
 				sibling->parent = 0;
+			}else{
+				if(sparent->parent->left == sparent) sparent->parent->left = sibling;
+				else sparent->parent->right = sibling;
+			}
+			sparent->parent = sibling;
+			rnphew->red = 1;
+		}else if(sibling->red == 1 && !on_left(child) && (lnphew == 0 || lnphew->red == 1)){ //Left right
+			std::cout << "left right" << std::endl;
+			Node* sparent = sibling->parent;
+			rnphew->parent = sparent;
+			sparent->left = rnphew;
+			sibling->left = rnphew->left;
+			rnphew->left= sibling;
+			sibling->parent = rnphew;
+			sibling->right = rnphew->right;
+
+			rnphew->red = 1;
+			sibling->red = 1;
+
+			sibling = rnphew;
+			
+			sparent = sibling->parent;
+			sparent->left = sibling->right;
+			if(sibling->right != 0)
+				sibling->right->parent = sparent;
+			sibling->right = sparent;
+			if(sparent->parent == 0){
+				root = sibling;
+				sibling->parent = sparent->parent;
 			}else{
 				if(sparent->parent->left == sparent) sparent->parent->left = sibling;
 				else sparent->parent->right = sibling;
