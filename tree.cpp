@@ -50,6 +50,9 @@ Tree::Node* Tree::search(int data){
 }
 //This function prints a subtree starting from a node, if you start from the root, it prints the whole tree
 void Tree::print(Node* root, int current_depth){
+	if(root == 0)
+		return;
+	std::cout << (root == 0) << " " << (root->right == 0) << std::endl;
 	if(root->right != 0) //If we can go right, go right. The function goes all the way to the right of the tree first, printing it out with the right at the top, and left at the bottom
 		print(root->right, current_depth + 1);
 	for(int i = 0; i < current_depth; i++) //Print out a space depending on the depth of the node, so nodes that are deeper in the tree will be farther from the left of the screen
@@ -256,62 +259,11 @@ bool Tree::on_left(Node* node){
 	return (node->parent->left == node);
 }
 
-/*
-	if(leaf->left == 0 && leaf->right == 0){ //Leaf has no children
-		if(leaf->data == root->data){
-			delete leaf;
-			return;
-		}
-		if(on_left(leaf))
-			parent->left = 0;
-		else
-			parent->right = 0;
-		delete leaf;
-		root->red = 1;
-	}else if(leaf->left == 0 && leaf->right != 0){ //Leaf has one right child
-		one_child(leaf->right);
-		if (leaf->right->red == -1 && parent->red == -1)
-			leaf->right->red = 1;
-
-		delete leaf;
-	}else if(leaf->left != 0 && leaf->right == 0){ //Leaf has one left child
-		one_child(leaf->left);
-
-		if(leaf->left->red == -1 && parent->red == -1)
-			leaf->left->red = 1;
-
-		delete leaf;
-	}else if(leaf->left != 0 && leaf->right != 0){ //Leaf has 2 children
-		Node* successor = find_inorder(leaf->right);
-		if(leaf->right == successor){ //Successor is the immediate right child
-			successor->parent = leaf->parent;
-			if(parent != 0){
-				if (!on_left(leaf)) parent->right = successor;
-				else parent->left = successor;
-			}else{
-				root = successor;
-			}
-			successor->left = leaf->left;
-			successor->left->parent = successor;
-			
-			if(successor->red == 1 && successor->right != 0)
-				successor->right->secondary == 1;
-			successor->red = leaf->red;
-
-			delete leaf;
-		}else{ //Successor is not its child
-			leaf->data = successor->data;
-			if(successor->right != 0){
-				successor->parent->left = successor->right;
-				successor->right->parent = successor->parent;
-			}
-			if(successor->red == 1)
-				successor->right->secondary = 1;
-			successor->parent->left = 0;
-			delete successor;
-		}
-	}
-	*/
+bool Tree::has_nphew(Node* node){
+	Node* sibling = getsibling(node);
+	if(!sibling) return false;
+	return (sibling->left != 0 || sibling->right != 0);
+}
 
 void Tree::remove(int num){
 	if(root->data == num && size == 1){
@@ -327,6 +279,18 @@ void Tree::remove(int num){
 	Node* child = 0;
 	
 	if(leaf->left == 0 && leaf->right == 0){
+		if(!has_nphew(leaf)){
+			if (leaf == parent->left)
+				parent->left = 0;
+			else
+				parent->right = 0;
+			delete leaf;
+			return;
+		}
+		if(leaf == root){
+			delete root;
+			return;
+		}
 		child = new Node();
 		child->parent = parent;
 		child->data = NULL;
@@ -376,6 +340,8 @@ void Tree::remove(int num){
 		Node* rnphew = sibling->right;
 		Node* lnphew = sibling->left;
 
+		if((sibling == 0) || (rnphew == 0 && lnphew == 0))
+			return;
 		if(sibling->red == 1 && on_left(child) && (rnphew != 0 && rnphew->red == -1)){ //Right right
 			std::cout << "right right" << std::endl;
 			Node* sparent = sibling->parent;

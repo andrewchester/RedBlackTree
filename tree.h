@@ -22,6 +22,7 @@ class Tree {
 		
 		Node* getuncle(Node* node); //Returns the uncle of a node
 		Node* getsibling(Node* node);
+		bool has_nphew(Node* node);
 	public:
 		Tree();
 		Node* root; //Root of tree
