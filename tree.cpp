@@ -23,36 +23,35 @@ Tree::Node* Tree::getuncle(Node* node){
 	}
 	return 0;
 }
-
+//Returns the sibling
 Tree::Node* Tree::getsibling(Node* node){
-	if(node->parent == 0) return 0;
-	if(on_left(node)) return node->parent->right;
+	if(node->parent == 0) return 0; //Return 0 if it's the root
+	if(on_left(node)) return node->parent->right; //Return the sibling
 	else return node->parent->left;
 }
-
+//Searches the tree for a node, and returns it if it exists
 Tree::Node* Tree::search(int data){
 	Node* current = root;
-	while(true){
-		if(current->data == data)
+	while(true){ //Recursively search through the tree
+		if(current->data == data) //Found node then return it
 			return current;
-		if(data > current->data)
+		if(data > current->data) //Go right if the data is greater
 			if(current->right != 0)
 				current = current->right;
 			else
 				break;
-		else if(data < current->data)
+		else if(data < current->data) //Go left if the data is lesser
 			if(current->left != 0)
 				current = current->left;
 			else
 				break;
 	}
-	return 0;
+	return 0; //Just returns 0 if it didn't find anything
 }
 //This function prints a subtree starting from a node, if you start from the root, it prints the whole tree
 void Tree::print(Node* root, int current_depth){
 	if(root == 0)
 		return;
-	std::cout << (root == 0) << " " << (root->right == 0) << std::endl;
 	if(root->right != 0) //If we can go right, go right. The function goes all the way to the right of the tree first, printing it out with the right at the top, and left at the bottom
 		print(root->right, current_depth + 1);
 	for(int i = 0; i < current_depth; i++) //Print out a space depending on the depth of the node, so nodes that are deeper in the tree will be farther from the left of the screen
@@ -236,41 +235,46 @@ void Tree::balance(Node* leaf){
 			balance(grandparent);
 	}
 }
+//Finds the inorder node, always returns the smallest child node of a given node, used by passing the right subtree of a node to find inorder
 Tree::Node* Tree::find_inorder(Node* current){
 	if(current->left != 0)
 		return find_inorder(current->left);
 	else
 		return current;
 }
+//The one child case, it deletes a node with one child
 void Tree::one_child(Node* child){
 	Node* leaf = child->parent;
 	Node* parent = leaf->parent;
-	if(parent != 0){
-		if(parent->left == leaf) parent->left = child;
+	if(parent != 0){  //Set up the left/right of the parent as the child depending on which side the child is on
+		if(parent->left == leaf) parent->left = child; 
 		else parent->right = child;
 		
 		child->parent = parent;
-	}else{
+	}else{ //The parent is root
 		root = leaf->right;
 		child->parent = 0;
 	}
 }
+//Returns true if a node is left of it's parent, false if it's on the right
 bool Tree::on_left(Node* node){
 	return (node->parent->left == node);
 }
-
+//Tests if a node has a nephew
 bool Tree::has_nphew(Node* node){
 	Node* sibling = getsibling(node);
 	if(!sibling) return false;
 	return (sibling->left != 0 || sibling->right != 0);
 }
-
+//Removes a node from the tree
 void Tree::remove(int num){
-	if(root->data == num && size == 1){
+	if(root->data == num && root->right == 0 && root->left == 0){ //If the node is being deleted, it's root, and doesn't have any children, then empty the tree
 		delete root;
+		root = 0;
+		size = 0;
 		return;
 	}
-	if(search(num) == 0){
+	if(search(num) == 0){ //Just exit the function if the node isn't in the tree
 		std::cout << num << " is not in the tree" << std::endl;
 		return;
 	}
@@ -278,8 +282,9 @@ void Tree::remove(int num){
 	Node* parent = leaf->parent;
 	Node* child = 0;
 	
-	if(leaf->left == 0 && leaf->right == 0){
-		if(!has_nphew(leaf)){
+	// Perform standard BST delete //
+	if(leaf->left == 0 && leaf->right == 0){ //No children 
+		if(!has_nphew(leaf)){ //No nephew, remove the node
 			if (leaf == parent->left)
 				parent->left = 0;
 			else
@@ -287,7 +292,7 @@ void Tree::remove(int num){
 			delete leaf;
 			return;
 		}
-		if(leaf == root){
+		if(leaf == root){ //Remove root if no children
 			delete root;
 			return;
 		}
@@ -343,7 +348,6 @@ void Tree::remove(int num){
 		if((sibling == 0) || (rnphew == 0 && lnphew == 0))
 			return;
 		if(sibling->red == 1 && on_left(child) && (rnphew != 0 && rnphew->red == -1)){ //Right right
-			std::cout << "right right" << std::endl;
 			Node* sparent = sibling->parent;
 			sparent->right = sibling->left;
 			if(sibling->left != 0)
@@ -359,7 +363,6 @@ void Tree::remove(int num){
 			sparent->parent = sibling;
 			rnphew->red = 1;
 		}else if(sibling->red == 1 && !on_left(child) && (lnphew != 0 && lnphew->red == -1)){ //Left left
-			std::cout << "left left" << std::endl;
 			Node* sparent = sibling->parent;
 			sparent->left = sibling->right;
 			sibling->right->parent = sparent;
@@ -374,7 +377,6 @@ void Tree::remove(int num){
 			sparent->parent = sibling;
 			lnphew->red = 1;
 		}else if(sibling->red == 1 && on_left(child) && (rnphew == 0 || rnphew->red == 1)){ //Right Left
-			std::cout << "right left" << std::endl;
 			Node* sparent = sibling->parent;
 			lnphew->parent = sparent;
 			sparent->right = lnphew;
@@ -404,7 +406,6 @@ void Tree::remove(int num){
 			sparent->parent = sibling;
 			rnphew->red = 1;
 		}else if(sibling->red == 1 && !on_left(child) && (lnphew == 0 || lnphew->red == 1)){ //Left right
-			std::cout << "left right" << std::endl;
 			Node* sparent = sibling->parent;
 			rnphew->parent = sparent;
 			sparent->left = rnphew;
@@ -432,6 +433,24 @@ void Tree::remove(int num){
 			}
 			sparent->parent = sibling;
 			rnphew->red = 1;
+		}else if(sibling->red == -1 && ((sibling->right != 0 && sibling->right->red == 1) || sibling->right == 0) && ((sibling->left != 0 && sibling->left->red == 1) || sibling->left == 0)){
+			if(on_left(sibling)){
+				Node* sparent = sibling->parent;
+				sibling->parent = sparent->parent;
+				sparent->left = sibling->right;
+				sibling->right->parent = sparent;
+				sibling->right = sparent;
+				sparent->parent = sibling;
+				sparent->left->red = -1;
+			}else{
+				Node* sparent = sibling->parent;
+				sibling->parent = sparent->parent;
+				sparent->right = sibling->left;
+				sibling->left->parent = sparent;
+				sibling->left = sparent;
+				sparent->parent = sibling;
+				sparent->right->red = -1;
+			}
 		}
 
 		if(child->red == NULL){
@@ -441,6 +460,8 @@ void Tree::remove(int num){
 		}
 	}
 
+
+	std::cout << "end" << std::endl;
 	size--;
 }
 //This function handles inserting data

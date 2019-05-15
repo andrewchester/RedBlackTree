@@ -70,6 +70,8 @@ int main(){
 				}
 				delete[] number;
 			}
+
+			std::cout << t.root << std::endl;
 		}else if(strcmp(input, "search") == 0){
 			char* number = new char[10];
 			std::cout << "Enter number: ";
