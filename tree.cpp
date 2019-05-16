@@ -279,34 +279,31 @@ void Tree::remove(int num){
 		return;
 	}
 	Node* leaf = search(num); 
+	Node* sibling = getsibling(leaf);
 	Node* parent = leaf->parent;
 	Node* child = 0;
+	bool delete_leaf_after = false;
 	
 	// Perform standard BST delete //
 	if(leaf->left == 0 && leaf->right == 0){ //No children 
-		if(!has_nphew(leaf)){ //No nephew, remove the node
-			if (leaf == parent->left)
-				parent->left = 0;
-			else
-				parent->right = 0;
-			delete leaf;
-			return;
-		}
-		if(leaf == root){ //Remove root if no children
-			delete root;
-			return;
-		}
-		child = new Node();
-		child->parent = parent;
-		child->data = NULL;
-		child->red = NULL;
+		if(sibling != 0){ //If it has a sibling, then set the nephews and check the black recoloring case
+			Node* rnphew = sibling->right;
+			Node* lnphew = sibling->left;
 
-		if(leaf->red == 1)
-			if(on_left(leaf)) parent->left = child;
-			else parent->right = child;
-		else
-			if(on_left(leaf)) parent->left = 0;
+			//Two black nephews and a black sibling, need to recolor the tree
+			if(leaf->red == 1 && (rnphew == 0 || (rnphew != 0 && rnphew->red == 1) && (lnphew == 0 || (lnphew != 0 && lnphew->red == 1)))){				
+				sibling->red = -1;
+				leaf->parent->red = 1;
+			}
+		}
+		if(sibling != 0 && sibling->red == 1 && sibling->right != 0 && sibling->right->red == -1){
+			delete_leaf_after = true;
+		}else if(sibling != 0 && sibling->red == 1 && sibling->left->red == 1 && !on_left(leaf)){
+			delete_leaf_after = true;
+		}else{
+			if(on_left(leaf)) parent->left = 0; //Remove leaf from the tree
 			else parent->right = 0;
+		}
 	}else if((leaf->left != 0 || leaf->right != 0) && (leaf->left == 0 || leaf->right == 0)){
 		child = 0;
 		if (leaf->right != 0) child = leaf->right;
@@ -328,6 +325,8 @@ void Tree::remove(int num){
 				leaf->right = child->right;
 			}
 			delete child;
+			if(leaf->left != 0 && leaf->left->left == 0 && leaf->left->right == 0)
+				leaf->left->red = -1;
 		}else{
 			if(child->right != 0){
 				child->right->parent = child->parent;
@@ -336,18 +335,19 @@ void Tree::remove(int num){
 				child->parent->left = 0;
 			}
 			delete child;
+			if(leaf->right != 0 && leaf->right->left == 0 && leaf->right->right == 0)
+				leaf->right->red = -1;
 		}
 	}
 	if(child != 0 && (leaf->red == -1 || child->red == -1)){
 		child->red = 1;
-	}else if(leaf->red == 1 && (child == 0 || child->red == 1 || child->red == NULL)){
-		Node* sibling = getsibling(child);
+	}else if(sibling != 0 && leaf->red == 1 && (child == 0 || child->red == 1 || child->red == NULL)){
 		Node* rnphew = sibling->right;
 		Node* lnphew = sibling->left;
 
 		if((sibling == 0) || (rnphew == 0 && lnphew == 0))
 			return;
-		if(sibling->red == 1 && on_left(child) && (rnphew != 0 && rnphew->red == -1)){ //Right right
+		if(sibling->red == 1 && on_left(leaf) && (rnphew != 0 && rnphew->red == -1)){ //Right right
 			Node* sparent = sibling->parent;
 			sparent->right = sibling->left;
 			if(sibling->left != 0)
@@ -362,7 +362,7 @@ void Tree::remove(int num){
 			}
 			sparent->parent = sibling;
 			rnphew->red = 1;
-		}else if(sibling->red == 1 && !on_left(child) && (lnphew != 0 && lnphew->red == -1)){ //Left left
+		}else if(sibling->red == 1 && !on_left(leaf) && (lnphew != 0 && lnphew->red == -1)){ //Left left
 			Node* sparent = sibling->parent;
 			sparent->left = sibling->right;
 			sibling->right->parent = sparent;
@@ -376,7 +376,7 @@ void Tree::remove(int num){
 			}
 			sparent->parent = sibling;
 			lnphew->red = 1;
-		}else if(sibling->red == 1 && on_left(child) && (rnphew == 0 || rnphew->red == 1)){ //Right Left
+		}else if(sibling->red == 1 && on_left(leaf) && (rnphew == 0 || rnphew->red == 1)){ //Right Left
 			Node* sparent = sibling->parent;
 			lnphew->parent = sparent;
 			sparent->right = lnphew;
@@ -405,7 +405,7 @@ void Tree::remove(int num){
 			}
 			sparent->parent = sibling;
 			rnphew->red = 1;
-		}else if(sibling->red == 1 && !on_left(child) && (lnphew == 0 || lnphew->red == 1)){ //Left right
+		}else if(sibling->red == 1 && !on_left(leaf) && (lnphew == 0 || lnphew->red == 1)){ //Left right
 			Node* sparent = sibling->parent;
 			rnphew->parent = sparent;
 			sparent->left = rnphew;
@@ -433,35 +433,133 @@ void Tree::remove(int num){
 			}
 			sparent->parent = sibling;
 			rnphew->red = 1;
-		}else if(sibling->red == -1 && ((sibling->right != 0 && sibling->right->red == 1) || sibling->right == 0) && ((sibling->left != 0 && sibling->left->red == 1) || sibling->left == 0)){
+		}
+		
+		if(sibling->red == -1 && ((sibling->right != 0 && sibling->right->red == 1) || sibling->right == 0) && ((sibling->left != 0 && sibling->left->red == 1) || sibling->left == 0)){
 			if(on_left(sibling)){
 				Node* sparent = sibling->parent;
-				sibling->parent = sparent->parent;
+				sibling->parent = parent->parent;
+				if (sibling->parent == 0)
+					root = sibling;
 				sparent->left = sibling->right;
-				sibling->right->parent = sparent;
 				sibling->right = sparent;
 				sparent->parent = sibling;
-				sparent->left->red = -1;
+				if(sparent->left != 0)
+					sparent->left->parent = sparent;
+				leaf->parent->red = -1;
+				root->red = 1;
+				
+				bool onleft;
+				//Reset the sibling but since the leaf is invisible we can't use getsibling()
+				if(leaf->parent->left == 0){
+					sibling = leaf->parent->right;
+					onleft = true;
+				}else {
+					sibling = leaf->parent->left;
+					onleft = false;
+				} 
+				Node* rnphew = sibling->right; Node* lnphew = sibling->left;
+				if (sibling != 0 && sibling->red == 1 && onleft && (rnphew != 0 && rnphew->red == -1)){
+					Node* sparent = sibling->parent;
+					sibling->parent = sparent->parent;
+					if (sibling->parent == 0)
+						root = sibling;
+					else
+						sparent->parent->left = sibling;
+					sparent->right = sibling->left;
+					sibling->left = sparent;
+					sparent->parent = sibling;
+					if(sparent->right != 0)
+						sparent->right->parent = sparent;
+					leaf->parent->red = 1;
+					leaf->parent->parent->red = -1;
+					getsibling(leaf->parent)->red = 1;
+				}else if (sibling != 0 && sibling->red == 1 && !onleft && (lnphew != 0 && lnphew->red == -1)){
+					Node* sparent = sibling->parent;
+					sibling->parent = parent->parent;
+					if (sibling->parent == 0)
+						root = sibling;
+					else
+						sibling->parent->right = sibling;
+					sparent->left = sibling->right;
+					sibling->right = sparent;
+					sparent->parent = sibling;
+					if(sparent->left != 0)
+						sparent->left->parent = sparent;
+					leaf->parent->red = 1;
+					leaf->parent->parent->red = -1;
+					getsibling(leaf->parent)->red = 1;
+				}
 			}else{
 				Node* sparent = sibling->parent;
-				sibling->parent = sparent->parent;
+				sibling->parent = parent->parent;
+				if (sibling->parent == 0)
+					root = sibling;
 				sparent->right = sibling->left;
-				sibling->left->parent = sparent;
 				sibling->left = sparent;
 				sparent->parent = sibling;
-				sparent->right->red = -1;
+				if(sparent->right != 0)
+					sparent->right->parent = sparent;
+				leaf->parent->red = -1;
+				root->red = 1;
+				bool onleft;
+				//Reset the sibling but since the leaf is invisible we can't use getsibling()
+				if(leaf->parent->left == 0){
+					sibling = leaf->parent->right;
+					onleft = true;
+				}else {
+					sibling = leaf->parent->right;
+					onleft = false;
+				} 
+				
+				Node* rnphew = sibling->right; Node* lnphew = sibling->left;
+
+				if (sibling->red == 1 && onleft && (rnphew != 0 && rnphew->red == -1)){
+					Node* sparent = sibling->parent;
+					sibling->parent = sparent->parent;
+					if (sibling->parent == 0)
+						root = sibling;
+					else
+						sibling->parent->left = sibling;
+					sparent->right = sibling->left;
+					sibling->left = sparent;
+					sparent->parent = sibling;
+					if(sparent->right != 0)
+						sparent->right->parent = sparent;
+					leaf->parent->red = 1;
+					leaf->parent->parent->red = -1;
+					getsibling(leaf->parent)->red = 1;
+				}else if (sibling->red == 1 && !onleft && (lnphew != 0 && lnphew->red == -1)){
+					Node* sparent = sibling->parent;
+					sibling->parent = parent->parent;
+					if (sibling->parent == 0)
+						root = sibling;
+					else
+						sibling->parent->right = sibling;
+					sparent->left = sibling->right;
+					sibling->right = sparent;
+					sparent->parent = sibling;
+					if(sparent->left != 0)
+						sparent->left->parent = sparent;
+					leaf->parent->red = 1;
+					leaf->parent->parent->red = -1;
+					getsibling(leaf->parent)->red = 1;
+				}
 			}
 		}
-
-		if(child->red == NULL){
-			if(on_left(child)) child->parent->left = 0;
-			else child->parent->right = 0;
-			delete child;
+		if(child != 0)
+			if(child->red == NULL){
+				if(on_left(child)) child->parent->left = 0;
+				else child->parent->right = 0;
+				delete child;
+			}
+		if(delete_leaf_after){
+			if(on_left(leaf)) leaf->parent->left = 0;
+			else leaf->parent->right = 0;
+			delete leaf;
 		}
+		root->red = 1; //Make sure root is black
 	}
-
-
-	std::cout << "end" << std::endl;
 	size--;
 }
 //This function handles inserting data
